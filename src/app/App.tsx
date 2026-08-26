@@ -103,6 +103,7 @@ import {
   WindowVibrancyBridge,
 } from "@/modules/theme";
 import { UpdaterDialog } from "@/modules/updater";
+import { DevicePreviewManager } from "@/modules/device-preview";
 import {
   useWorkspaceEnvStore,
   workspaceScopeKey,
@@ -1578,6 +1579,12 @@ export default function App() {
           />
 
           <UpdaterDialog />
+
+          <DevicePreviewManager
+            previewUrl={
+              activeTab?.kind === "preview" ? activeTab.url : undefined
+            }
+          />
 
           <CloseDialogs
             tabs={tabs}

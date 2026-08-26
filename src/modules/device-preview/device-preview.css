@@ -1,0 +1,145 @@
+/* Device Preview Plugin - scoped styles */
+
+/* entry animation for floating device panels */
+@keyframes dp-panel-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* entry animation for picker popover */
+@keyframes dp-picker-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* bezel micro-action buttons */
+.dp-bezel-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.dp-bezel-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.dp-bezel-btn:active {
+  background: rgba(255, 255, 255, 0.28);
+  transform: scale(0.95);
+}
+
+.dp-bezel-close:hover {
+  background: rgba(239, 68, 68, 0.6) !important;
+}
+
+/* device item hover in picker */
+.dp-device-item {
+  transition: background 0.1s ease;
+}
+
+.dp-device-item:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.dp-device-item:active:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* close all button hover */
+.dp-close-all-btn:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
+/* picker close button hover */
+.dp-picker-close:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* FAB hover and active states */
+.dp-fab:hover {
+  transform: scale(1.06);
+  border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+.dp-fab:active {
+  transform: scale(0.96);
+}
+
+.dp-fab-open {
+  border-color: rgba(99, 102, 241, 0.4) !important;
+}
+
+/* subtle pulse for first-use hint when no devices active */
+.dp-fab:not(.dp-fab-active) {
+  animation: dp-fab-pulse 3s ease-in-out infinite;
+}
+
+@keyframes dp-fab-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 4px 16px rgba(0, 0, 0, 0.4),
+      0 2px 6px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 4px 16px rgba(99, 102, 241, 0.15),
+      0 2px 6px rgba(0, 0, 0, 0.2),
+      0 0 0 3px rgba(99, 102, 241, 0.08);
+  }
+}
+
+/* dragging states */
+.dp-bezel-top:active,
+.dp-bezel-bottom:active,
+.dp-collapsed-pill:active {
+  cursor: grabbing !important;
+}
+
+/* prevent iframe from intercepting pointer events during drag */
+.dp-portal-panel:has(.dp-bezel-top:active) iframe,
+.dp-portal-panel:has(.dp-bezel-bottom:active) iframe {
+  pointer-events: none;
+}
+
+/* scrollbar styling for picker */
+.dp-picker ::-webkit-scrollbar {
+  width: 4px;
+}
+
+.dp-picker ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dp-picker ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.dp-picker ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
