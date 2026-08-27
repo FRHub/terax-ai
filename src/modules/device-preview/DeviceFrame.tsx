@@ -13,6 +13,7 @@ type Props = {
   scale: number;
   nonce: number;
   customSize?: { width: number; height: number };
+  isDragging?: boolean;
   onPointerDown: (e: React.PointerEvent) => void;
   onReload: () => void;
   onClose: () => void;
@@ -26,6 +27,7 @@ export function DeviceFrame({
   scale,
   nonce,
   customSize,
+  isDragging,
   onPointerDown,
   onReload,
   onClose,
@@ -34,26 +36,52 @@ export function DeviceFrame({
 }: Props) {
   const [hovered, setHovered] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  const [isSpenPopped, setIsSpenPopped] = useState(false);
 
   const isPhone = device.category === "phone";
   const isTablet = device.category === "tablet";
   const isLaptop = device.category === "laptop";
   const isResponsive = device.category === "responsive";
 
+  const isIphone17Pro = device.id === "iphone-17-pro";
+  const isHuaweiPura = device.id === "huawei-pura-80-ultra";
+  const isGalaxyS26 = device.id === "galaxy-s26-ultra";
+  const isIphone16Pro = device.id === "iphone-16-pro";
+
   const effectiveWidth = customSize?.width ?? device.screenWidth;
   const effectiveHeight = customSize?.height ?? device.screenHeight;
 
-  const bezelPad = isResponsive ? 6 : isLaptop ? 8 : isTablet ? 14 : 16;
-  const topBezel = isResponsive ? 28 : isPhone ? 44 : isTablet ? 24 : 32;
-  const bottomBezel = isResponsive
-    ? 14
-    : isPhone
-      ? 28
-      : isTablet
-        ? 22
-        : isLaptop
+  // Exact real-device bezel thickness calibration:
+  // Modern flagship smartphones have razor-thin ~1.5mm uniform bezels (4px in CSS)
+  const bezelPad = isPhone
+    ? Math.max(3, 4 * scale)
+    : isResponsive
+      ? 6
+      : isLaptop
+        ? 8
+        : isTablet
+          ? 10
+          : 4;
+
+  const topBezel = isPhone
+    ? bezelPad
+    : isResponsive
+      ? 26
+      : isLaptop
+        ? 18
+        : isTablet
           ? 16
-          : 18;
+          : bezelPad;
+
+  const bottomBezel = isPhone
+    ? bezelPad
+    : isResponsive
+      ? 14
+      : isLaptop
+        ? 16
+        : isTablet
+          ? 16
+          : bezelPad;
 
   const frameWidth = effectiveWidth * scale + bezelPad * 2;
   const frameHeight = effectiveHeight * scale + topBezel + bottomBezel;
@@ -106,7 +134,14 @@ export function DeviceFrame({
     }
   }, []);
 
-  const scalePct = `${Math.round(scale * 100)}%`;
+  // Determine frame gradient based on device finish
+  const frameBackground = isIphone17Pro
+    ? "linear-gradient(135deg, #d9692e 0%, #b8501f 40%, #943a11 100%)"
+    : isHuaweiPura
+      ? "linear-gradient(135deg, #2b2e36 0%, #1a1c21 50%, #111215 100%)"
+      : isGalaxyS26
+        ? "linear-gradient(145deg, #f7f1e6 0%, #ede5d6 50%, #ddd3c0 100%)"
+        : device.color;
 
   return (
     <div
@@ -117,295 +152,80 @@ export function DeviceFrame({
         width: frameWidth,
         height: frameHeight,
         borderRadius: device.bezelRadius * scale,
-        backgroundColor: device.color,
+        background: frameBackground,
         position: "relative",
-        overflow: isResponsive ? "visible" : "hidden",
-        boxShadow: isPhone
-          ? "0 28px 80px -12px rgba(0,0,0,0.7), 0 12px 28px -6px rgba(0,0,0,0.5), 0 0 0 1.5px rgba(255,255,255,0.14), inset 0 1px 0 rgba(255,255,255,0.2)"
-          : isLaptop
-            ? "0 32px 90px -15px rgba(0,0,0,0.8), 0 12px 32px -8px rgba(0,0,0,0.6), 0 0 0 1.5px rgba(255,255,255,0.1), inset 0 1px 0 rgba(255,255,255,0.15)"
-            : "0 24px 70px -10px rgba(0,0,0,0.65), 0 10px 24px -5px rgba(0,0,0,0.4), 0 0 0 1.5px rgba(255,255,255,0.12), inset 0 1px 0 rgba(255,255,255,0.16)",
+        overflow: "visible",
         userSelect: "none",
-        transition: isResizing ? "none" : "box-shadow 0.2s ease",
+        transition: isResizing || isDragging ? "none" : "box-shadow 0.2s ease",
       }}
     >
-      {/* Side button accents for iPhone 16 Pro */}
-      {device.id === "iphone-16-pro" && (
-        <>
-          {/* Action button (left top) */}
-          <div
-            style={{
-              position: "absolute",
-              left: -2.5,
-              top: 80 * scale,
-              width: 3,
-              height: 24 * scale,
-              borderRadius: "2px 0 0 2px",
-              backgroundColor: "#3a3937",
-              boxShadow: "-1px 0 2px rgba(0,0,0,0.5)",
-            }}
-          />
-          {/* Volume up (left) */}
-          <div
-            style={{
-              position: "absolute",
-              left: -2.5,
-              top: 120 * scale,
-              width: 3,
-              height: 42 * scale,
-              borderRadius: "2px 0 0 2px",
-              backgroundColor: "#3a3937",
-              boxShadow: "-1px 0 2px rgba(0,0,0,0.5)",
-            }}
-          />
-          {/* Volume down (left) */}
-          <div
-            style={{
-              position: "absolute",
-              left: -2.5,
-              top: 172 * scale,
-              width: 3,
-              height: 42 * scale,
-              borderRadius: "2px 0 0 2px",
-              backgroundColor: "#3a3937",
-              boxShadow: "-1px 0 2px rgba(0,0,0,0.5)",
-            }}
-          />
-          {/* Power button (right) */}
-          <div
-            style={{
-              position: "absolute",
-              right: -2.5,
-              top: 140 * scale,
-              width: 3,
-              height: 60 * scale,
-              borderRadius: "0 2px 2px 0",
-              backgroundColor: "#3a3937",
-              boxShadow: "1px 0 2px rgba(0,0,0,0.5)",
-            }}
-          />
-        </>
-      )}
-
-      {/* Top Bezel & Drag Handle */}
+      {/* Floating Glass Controls Header for Phones */}
       <div
-        className="dp-bezel-top"
-        onPointerDown={onPointerDown}
-        onDoubleClick={onToggleCollapse}
+        className="dp-floating-header"
         style={{
-          height: topBezel,
-          position: "relative",
-          cursor: "grab",
+          position: "absolute",
+          top: -34,
+          left: "50%",
+          transform: "translateX(-50%)",
+          height: 28,
+          padding: "0 8px 0 10px",
           display: "flex",
           alignItems: "center",
-          justifyContent: "space-between",
-          padding: `0 ${Math.max(10, bezelPad * scale)}px`,
+          gap: 8,
+          background: "rgba(18, 18, 24, 0.92)",
+          backdropFilter: "blur(18px)",
+          WebkitBackdropFilter: "blur(18px)",
+          border: "1px solid rgba(255, 255, 255, 0.12)",
+          borderRadius: 14,
+          boxShadow: "0 8px 28px rgba(0,0,0,0.6), 0 2px 6px rgba(0,0,0,0.4)",
+          opacity: hovered || isResizing || isDragging ? 1 : 0.25,
+          transition: "opacity 0.2s ease",
+          zIndex: 60,
+          whiteSpace: "nowrap",
+          color: "rgba(255, 255, 255, 0.9)",
+          fontFamily: "var(--font-sans, system-ui)",
         }}
       >
-        {/* Device specs label & quick snap (fades in on hover) */}
+        {/* Dedicated Grab Handle with Grip Dots */}
         <div
+          onPointerDown={onPointerDown}
+          onDoubleClick={onToggleCollapse}
           style={{
             display: "flex",
             alignItems: "center",
             gap: 6,
-            opacity: hovered || isResizing ? 0.95 : 0.4,
-            transition: "opacity 0.15s ease",
-            fontSize: Math.max(9, Math.min(11, 10 * scale)),
-            fontFamily: "var(--font-sans, system-ui)",
-            color: "rgba(255,255,255,0.85)",
-            zIndex: 10,
+            cursor: isDragging ? "grabbing" : "grab",
+            padding: "2px 4px",
+            borderRadius: 4,
           }}
+          title="Drag to move"
         >
-          <span style={{ fontWeight: 600 }}>{device.name}</span>
-          <span style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.9em" }}>
-            {effectiveWidth}x{effectiveHeight} · {scalePct}
+          <svg
+            width="6"
+            height="12"
+            viewBox="0 0 6 12"
+            fill="rgba(255,255,255,0.4)"
+            style={{ flexShrink: 0 }}
+          >
+            <circle cx="1.5" cy="2" r="1" />
+            <circle cx="4.5" cy="2" r="1" />
+            <circle cx="1.5" cy="6" r="1" />
+            <circle cx="4.5" cy="6" r="1" />
+            <circle cx="1.5" cy="10" r="1" />
+            <circle cx="4.5" cy="10" r="1" />
+          </svg>
+          <span style={{ fontSize: 11, fontWeight: 550, color: "#fff" }}>
+            {device.name}
+          </span>
+          <span style={{ color: "rgba(255,255,255,0.45)", fontSize: 10, fontFamily: "var(--font-mono, monospace)" }}>
+            {effectiveWidth}x{effectiveHeight}
           </span>
         </div>
 
-        {/* Realistic iPhone 16 Pro Dynamic Island & Speaker */}
-        {device.id === "iphone-16-pro" && (
-          <>
-            {/* Speaker receiver ear-slit */}
-            <div
-              style={{
-                position: "absolute",
-                top: 4 * scale,
-                left: "50%",
-                transform: "translateX(-50%)",
-                width: 48 * scale,
-                height: 2.5 * scale,
-                borderRadius: 2 * scale,
-                backgroundColor: "#0d0d0e",
-                border: "0.5px solid rgba(255,255,255,0.06)",
-                pointerEvents: "none",
-              }}
-            />
-            {/* Dynamic Island capsule with camera optics */}
-            <div
-              className="dp-dynamic-island"
-              style={{
-                position: "absolute",
-                top: 10 * scale,
-                left: "50%",
-                transform: "translateX(-50%)",
-                width: 92 * scale,
-                height: 25 * scale,
-                borderRadius: 14 * scale,
-                backgroundColor: "#000",
-                border: "1px solid rgba(255,255,255,0.08)",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.6)",
-                pointerEvents: "none",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "flex-end",
-                paddingRight: 10 * scale,
-              }}
-            >
-              {/* Front Camera with optical glint */}
-              <div
-                style={{
-                  width: 9 * scale,
-                  height: 9 * scale,
-                  borderRadius: "50%",
-                  backgroundColor: "#050711",
-                  border: "1px solid #111a2e",
-                  position: "relative",
-                }}
-              >
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "20%",
-                    left: "20%",
-                    width: 3 * scale,
-                    height: 3 * scale,
-                    borderRadius: "50%",
-                    backgroundColor: "rgba(56, 189, 248, 0.4)",
-                  }}
-                />
-              </div>
-            </div>
-          </>
-        )}
+        <div style={{ width: 1, height: 12, background: "rgba(255,255,255,0.15)" }} />
 
-        {/* iPhone SE Top Speaker & Camera */}
-        {device.id === "iphone-se" && (
-          <div
-            style={{
-              position: "absolute",
-              top: 14 * scale,
-              left: "50%",
-              transform: "translateX(-50%)",
-              display: "flex",
-              alignItems: "center",
-              gap: 8 * scale,
-              pointerEvents: "none",
-            }}
-          >
-            {/* Camera */}
-            <div
-              style={{
-                width: 6 * scale,
-                height: 6 * scale,
-                borderRadius: "50%",
-                backgroundColor: "#080808",
-                border: "1px solid rgba(255,255,255,0.1)",
-              }}
-            />
-            {/* Speaker bar */}
-            <div
-              style={{
-                width: 46 * scale,
-                height: 3 * scale,
-                borderRadius: 2 * scale,
-                backgroundColor: "#0a0a0a",
-                border: "1px solid rgba(255,255,255,0.08)",
-              }}
-            />
-          </div>
-        )}
-
-        {/* Pixel 9 & Galaxy Punch hole camera */}
-        {(device.id === "pixel-9" || device.id === "galaxy-s24") && (
-          <div
-            style={{
-              position: "absolute",
-              top: 10 * scale,
-              left: "50%",
-              transform: "translateX(-50%)",
-              width: 10 * scale,
-              height: 10 * scale,
-              borderRadius: "50%",
-              backgroundColor: "#000",
-              border: "1px solid rgba(255,255,255,0.1)",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.5)",
-              pointerEvents: "none",
-            }}
-          />
-        )}
-
-        {/* iPad Top FaceTime Camera */}
-        {isTablet && (
-          <div
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: 6 * scale,
-              height: 6 * scale,
-              borderRadius: "50%",
-              backgroundColor: "#080808",
-              border: "1px solid rgba(255,255,255,0.08)",
-              pointerEvents: "none",
-            }}
-          />
-        )}
-
-        {/* MacBook Air 13" Notch & Camera */}
-        {isLaptop && (
-          <div
-            style={{
-              position: "absolute",
-              top: 0,
-              left: "50%",
-              transform: "translateX(-50%)",
-              width: 72 * scale,
-              height: 14 * scale,
-              borderRadius: `0 0 ${4 * scale}px ${4 * scale}px`,
-              backgroundColor: "#000",
-              border: "1px solid rgba(255,255,255,0.08)",
-              borderTop: "none",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              pointerEvents: "none",
-            }}
-          >
-            <div
-              style={{
-                width: 5 * scale,
-                height: 5 * scale,
-                borderRadius: "50%",
-                backgroundColor: "#080808",
-                border: "0.5px solid rgba(255,255,255,0.2)",
-              }}
-            />
-          </div>
-        )}
-
-        {/* Micro Action Buttons (Top Right) */}
-        <div
-          className="dp-no-drag"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 4,
-            opacity: hovered ? 1 : 0.6,
-            transition: "opacity 0.15s ease",
-            zIndex: 20,
-          }}
-        >
+        {/* Actions in floating header */}
+        <div className="dp-no-drag" style={{ display: "flex", alignItems: "center", gap: 3 }}>
           <button
             type="button"
             onPointerDown={(e) => e.stopPropagation()}
@@ -460,15 +280,292 @@ export function DeviceFrame({
         </div>
       </div>
 
-      {/* Screen viewport */}
+      {/* S-Pen Stylus Accessory for Galaxy S26 Ultra */}
+      {isGalaxyS26 && (
+        <div
+          className="dp-spen-accessory dp-no-drag"
+          onClick={() => setIsSpenPopped((v) => !v)}
+          title={isSpenPopped ? "Click to dock S-Pen" : "Click to eject S-Pen"}
+          style={{
+            position: "absolute",
+            left: -18 * scale,
+            bottom: isSpenPopped ? 40 * scale : 20 * scale,
+            width: 7 * scale,
+            height: 180 * scale,
+            borderRadius: `${3 * scale}px ${3 * scale}px ${1 * scale}px ${1 * scale}px`,
+            background: "linear-gradient(90deg, #faf7f2, #ece4d4)",
+            boxShadow: "-3px 6px 16px rgba(0,0,0,0.45), 0 0 0 0.5px rgba(0,0,0,0.15)",
+            zIndex: 40,
+            cursor: "pointer",
+            transform: isSpenPopped ? "rotate(-12deg) translateY(-20px)" : "rotate(-3deg)",
+            transformOrigin: "bottom center",
+            transition: "all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: `${2 * scale}px 0`,
+          }}
+        >
+          {/* Clicky Top Button */}
+          <div
+            style={{
+              width: 5 * scale,
+              height: 10 * scale,
+              borderRadius: `${1.5 * scale}px ${1.5 * scale}px 0 0`,
+              background: "#dcd1bd",
+              borderBottom: "1px solid rgba(0,0,0,0.2)",
+            }}
+          />
+          {/* Stylus Side Click Button */}
+          <div
+            style={{
+              width: 3 * scale,
+              height: 24 * scale,
+              borderRadius: 1.5 * scale,
+              background: "#ded4c2",
+              boxShadow: "inset 0 1px 1px rgba(0,0,0,0.2)",
+            }}
+          />
+          {/* Fine Cone Tip */}
+          <div
+            style={{
+              width: 3 * scale,
+              height: 8 * scale,
+              borderRadius: "0 0 50% 50%",
+              background: "#2b2b2b",
+            }}
+          />
+        </div>
+      )}
+
+      {/* Side Hardware: iPhone 17 Pro */}
+      {isIphone17Pro && (
+        <>
+          {/* Action Button (left top) */}
+          <div
+            style={{
+              position: "absolute",
+              left: -3,
+              top: 76 * scale,
+              width: 3.5,
+              height: 24 * scale,
+              borderRadius: "2px 0 0 2px",
+              backgroundColor: "#732c0b",
+              boxShadow: "-1px 0 2px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,200,160,0.3)",
+            }}
+          />
+          {/* Volume Up */}
+          <div
+            style={{
+              position: "absolute",
+              left: -3,
+              top: 114 * scale,
+              width: 3.5,
+              height: 42 * scale,
+              borderRadius: "2px 0 0 2px",
+              backgroundColor: "#732c0b",
+              boxShadow: "-1px 0 2px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,200,160,0.3)",
+            }}
+          />
+          {/* Volume Down */}
+          <div
+            style={{
+              position: "absolute",
+              left: -3,
+              top: 168 * scale,
+              width: 3.5,
+              height: 42 * scale,
+              borderRadius: "2px 0 0 2px",
+              backgroundColor: "#732c0b",
+              boxShadow: "-1px 0 2px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,200,160,0.3)",
+            }}
+          />
+          {/* Power / Siri Button (right top) */}
+          <div
+            style={{
+              position: "absolute",
+              right: -3,
+              top: 130 * scale,
+              width: 3.5,
+              height: 58 * scale,
+              borderRadius: "0 2px 2px 0",
+              backgroundColor: "#732c0b",
+              boxShadow: "1px 0 2px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,200,160,0.3)",
+            }}
+          />
+          {/* Camera Control / Capture Button (right bottom) */}
+          <div
+            style={{
+              position: "absolute",
+              right: -3,
+              top: 480 * scale,
+              width: 3.5,
+              height: 48 * scale,
+              borderRadius: "0 1.5px 1.5px 0",
+              backgroundColor: "#5a2107",
+              border: "0.5px solid rgba(255, 180, 130, 0.4)",
+              borderLeft: "none",
+              boxShadow: "1px 0 3px rgba(0,0,0,0.6)",
+            }}
+            title="iPhone 17 Pro Camera Control Button"
+          />
+        </>
+      )}
+
+      {/* Side Hardware: Huawei Pura 80 Ultra */}
+      {isHuaweiPura && (
+        <>
+          {/* Volume Rocker Bar (right) */}
+          <div
+            style={{
+              position: "absolute",
+              right: -2.5,
+              top: 120 * scale,
+              width: 3,
+              height: 68 * scale,
+              borderRadius: "0 2px 2px 0",
+              backgroundColor: "#2c2f37",
+              boxShadow: "1px 0 2px rgba(0,0,0,0.6)",
+            }}
+          />
+          {/* Power Button with Red Signature Accent Line */}
+          <div
+            style={{
+              position: "absolute",
+              right: -2.5,
+              top: 204 * scale,
+              width: 3,
+              height: 36 * scale,
+              borderRadius: "0 2px 2px 0",
+              backgroundColor: "#2c2f37",
+              boxShadow: "1px 0 2px rgba(0,0,0,0.6)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <div
+              style={{
+                width: 1.5,
+                height: 12 * scale,
+                backgroundColor: "#e11d48",
+                borderRadius: 1,
+              }}
+            />
+          </div>
+        </>
+      )}
+
+      {/* Side Hardware: Samsung Galaxy S26 Ultra */}
+      {isGalaxyS26 && (
+        <>
+          {/* Volume Rocker (right) */}
+          <div
+            style={{
+              position: "absolute",
+              right: -2.5,
+              top: 130 * scale,
+              width: 3,
+              height: 66 * scale,
+              borderRadius: "0 2px 2px 0",
+              backgroundColor: "#d5cabb",
+              boxShadow: "1px 0 2px rgba(0,0,0,0.3)",
+            }}
+          />
+          {/* Power Button (right) */}
+          <div
+            style={{
+              position: "absolute",
+              right: -2.5,
+              top: 216 * scale,
+              width: 3,
+              height: 38 * scale,
+              borderRadius: "0 2px 2px 0",
+              backgroundColor: "#d5cabb",
+              boxShadow: "1px 0 2px rgba(0,0,0,0.3)",
+            }}
+          />
+        </>
+      )}
+
+      {/* Side button accents for iPhone 16 Pro */}
+      {isIphone16Pro && (
+        <>
+          <div
+            style={{
+              position: "absolute",
+              left: -2.5,
+              top: 80 * scale,
+              width: 3,
+              height: 24 * scale,
+              borderRadius: "2px 0 0 2px",
+              backgroundColor: "#3a3937",
+              boxShadow: "-1px 0 2px rgba(0,0,0,0.5)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: -2.5,
+              top: 120 * scale,
+              width: 3,
+              height: 42 * scale,
+              borderRadius: "2px 0 0 2px",
+              backgroundColor: "#3a3937",
+              boxShadow: "-1px 0 2px rgba(0,0,0,0.5)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: -2.5,
+              top: 172 * scale,
+              width: 3,
+              height: 42 * scale,
+              borderRadius: "2px 0 0 2px",
+              backgroundColor: "#3a3937",
+              boxShadow: "-1px 0 2px rgba(0,0,0,0.5)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              right: -2.5,
+              top: 140 * scale,
+              width: 3,
+              height: 60 * scale,
+              borderRadius: "0 2px 2px 0",
+              backgroundColor: "#3a3937",
+              boxShadow: "1px 0 2px rgba(0,0,0,0.5)",
+            }}
+          />
+        </>
+      )}
+
+      {/* Outer Titanium Bezel Drag Handle */}
       <div
-        className="dp-screen"
+        onPointerDown={onPointerDown}
+        onDoubleClick={onToggleCollapse}
         style={{
+          position: "absolute",
+          inset: 0,
+          borderRadius: "inherit",
+          cursor: isDragging ? "grabbing" : "grab",
+          pointerEvents: "auto",
+          zIndex: 1,
+        }}
+      />
+
+      {/* Screen Viewport */}
+      <div
+        className="dp-screen-wrapper"
+        style={{
+          position: "relative",
           width: effectiveWidth * scale,
           height: effectiveHeight * scale,
-          margin: `0 ${bezelPad}px`,
-          position: "relative",
-          overflow: "hidden",
+          margin: `${topBezel}px ${bezelPad}px ${bottomBezel}px`,
+          zIndex: 2,
           borderRadius: isPhone
             ? Math.max(0, (device.bezelRadius - bezelPad) * scale)
             : isTablet
@@ -476,9 +573,218 @@ export function DeviceFrame({
               : isResponsive
                 ? 8 * scale
                 : 2,
+          overflow: "hidden",
           background: "#fff",
+          boxShadow: "inset 0 0 0 1px rgba(0,0,0,0.15)",
         }}
       >
+        {/* Realistic iPhone 17 Pro Dynamic Island & Speaker */}
+        {isIphone17Pro && (
+          <>
+            <div
+              style={{
+                position: "absolute",
+                top: 1.5 * scale,
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: 48 * scale,
+                height: 2 * scale,
+                borderRadius: 1 * scale,
+                backgroundColor: "#110905",
+                border: "0.5px solid rgba(255,255,255,0.1)",
+                pointerEvents: "none",
+                zIndex: 12,
+              }}
+            />
+            <div
+              className="dp-dynamic-island"
+              style={{
+                position: "absolute",
+                top: 8 * scale,
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: 96 * scale,
+                height: 25 * scale,
+                borderRadius: 13 * scale,
+                backgroundColor: "#000",
+                border: "1px solid rgba(255,255,255,0.1)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.7)",
+                pointerEvents: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: `0 ${10 * scale}px`,
+                zIndex: 12,
+              }}
+            >
+              <div
+                style={{
+                  width: 7 * scale,
+                  height: 7 * scale,
+                  borderRadius: "50%",
+                  backgroundColor: "#0a0a0c",
+                  border: "1px solid #1a1a24",
+                }}
+              />
+              <div
+                style={{
+                  width: 9 * scale,
+                  height: 9 * scale,
+                  borderRadius: "50%",
+                  backgroundColor: "#050711",
+                  border: "1px solid #111a2e",
+                  position: "relative",
+                }}
+              >
+                <div
+                  className="dp-lens-glint-active"
+                  style={{
+                    position: "absolute",
+                    top: "20%",
+                    left: "20%",
+                    width: 3 * scale,
+                    height: 3 * scale,
+                    borderRadius: "50%",
+                    backgroundColor: "rgba(56, 189, 248, 0.6)",
+                  }}
+                />
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Realistic iPhone 16 Pro Dynamic Island */}
+        {isIphone16Pro && (
+          <div
+            className="dp-dynamic-island"
+            style={{
+              position: "absolute",
+              top: 8 * scale,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: 92 * scale,
+              height: 24 * scale,
+              borderRadius: 12 * scale,
+              backgroundColor: "#000",
+              border: "1px solid rgba(255,255,255,0.08)",
+              boxShadow: "0 2px 6px rgba(0,0,0,0.6)",
+              pointerEvents: "none",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-end",
+              paddingRight: 10 * scale,
+              zIndex: 12,
+            }}
+          >
+            <div
+              style={{
+                width: 9 * scale,
+                height: 9 * scale,
+                borderRadius: "50%",
+                backgroundColor: "#050711",
+                border: "1px solid #111a2e",
+              }}
+            />
+          </div>
+        )}
+
+        {/* Huawei Pura 80 Ultra Punch hole */}
+        {isHuaweiPura && (
+          <div
+            style={{
+              position: "absolute",
+              top: 8 * scale,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: 9 * scale,
+              height: 9 * scale,
+              borderRadius: "50%",
+              backgroundColor: "#000",
+              border: "1px solid rgba(255,255,255,0.2)",
+              boxShadow: "0 1px 4px rgba(0,0,0,0.7)",
+              pointerEvents: "none",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 12,
+            }}
+          >
+            <div
+              style={{
+                width: 3 * scale,
+                height: 3 * scale,
+                borderRadius: "50%",
+                backgroundColor: "rgba(45, 212, 191, 0.6)",
+              }}
+            />
+          </div>
+        )}
+
+        {/* Samsung Galaxy S26 Ultra Infinity-O Punch hole */}
+        {isGalaxyS26 && (
+          <div
+            style={{
+              position: "absolute",
+              top: 8 * scale,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: 8 * scale,
+              height: 8 * scale,
+              borderRadius: "50%",
+              backgroundColor: "#000",
+              border: "1px solid rgba(255,255,255,0.2)",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
+              pointerEvents: "none",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 12,
+            }}
+          >
+            <div
+              style={{
+                width: 2.5 * scale,
+                height: 2.5 * scale,
+                borderRadius: "50%",
+                backgroundColor: "rgba(96, 165, 250, 0.5)",
+              }}
+            />
+          </div>
+        )}
+
+        {/* Home indicator bar inside the display */}
+        {isPhone && device.id !== "iphone-se" && (
+          <div
+            className="dp-home-indicator"
+            style={{
+              position: "absolute",
+              bottom: 6 * scale,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: 104 * scale,
+              height: 4 * scale,
+              borderRadius: 2 * scale,
+              backgroundColor: "rgba(0, 0, 0, 0.35)",
+              boxShadow: "0 0 1px rgba(255,255,255,0.4)",
+              pointerEvents: "none",
+              zIndex: 12,
+            }}
+          />
+        )}
+
+        {/* Quad-curved micro 2.5D glass effect for Huawei */}
+        {isHuaweiPura && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              boxShadow: "inset 0 0 8px rgba(0,0,0,0.35)",
+              pointerEvents: "none",
+              zIndex: 3,
+            }}
+          />
+        )}
+
         {/* Subtle glass reflection overlay */}
         <div
           className="dp-screen-reflection"
@@ -486,7 +792,7 @@ export function DeviceFrame({
             position: "absolute",
             inset: 0,
             background:
-              "linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 35%, transparent 65%, rgba(255,255,255,0.02) 100%)",
+              "linear-gradient(135deg, rgba(255,255,255,0.06) 0%, transparent 35%, transparent 65%, rgba(255,255,255,0.02) 100%)",
             zIndex: 2,
             pointerEvents: "none",
           }}
@@ -521,64 +827,6 @@ export function DeviceFrame({
         )}
       </div>
 
-      {/* Bottom bezel (Home indicator / MacBook lip / iPhone SE home button) */}
-      <div
-        className="dp-bezel-bottom"
-        onPointerDown={onPointerDown}
-        onDoubleClick={onToggleCollapse}
-        style={{
-          height: bottomBezel,
-          position: "relative",
-          cursor: "grab",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {/* Modern Home Indicator Bar for iPhone 16 / Pixel */}
-        {isPhone && device.id !== "iphone-se" && (
-          <div
-            className="dp-home-indicator"
-            style={{
-              width: 104 * scale,
-              height: 4 * scale,
-              borderRadius: 2 * scale,
-              backgroundColor: "rgba(255,255,255,0.22)",
-              pointerEvents: "none",
-            }}
-          />
-        )}
-
-        {/* iPhone SE Touch ID Home Button */}
-        {device.id === "iphone-se" && (
-          <div
-            style={{
-              width: 18 * scale,
-              height: 18 * scale,
-              borderRadius: "50%",
-              border: "1.5px solid rgba(255,255,255,0.18)",
-              backgroundColor: "#161618",
-              boxShadow: "inset 0 1px 2px rgba(0,0,0,0.6)",
-              pointerEvents: "none",
-            }}
-          />
-        )}
-
-        {/* MacBook Open Notch Recess */}
-        {isLaptop && (
-          <div
-            style={{
-              width: 60 * scale,
-              height: 4 * scale,
-              borderRadius: `0 0 ${3 * scale}px ${3 * scale}px`,
-              backgroundColor: "rgba(0,0,0,0.4)",
-              border: "1px solid rgba(255,255,255,0.06)",
-              pointerEvents: "none",
-            }}
-          />
-        )}
-      </div>
-
       {/* Free Resize Handle for Responsive Device */}
       {isResponsive && onResize && (
         <div
@@ -601,7 +849,6 @@ export function DeviceFrame({
             padding: "0 3px 3px 0",
           }}
         >
-          {/* Resize corner grip lines */}
           <svg
             width="10"
             height="10"

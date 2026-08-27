@@ -10,6 +10,7 @@ import {
   ArrowReloadHorizontalIcon,
   Globe02Icon,
   LinkSquare02Icon,
+  SmartPhone01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -20,6 +21,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useDevicePreviewStore } from "@/modules/device-preview";
 
 type PortPreset = {
   port: number;
@@ -61,6 +63,7 @@ export const PreviewAddressBar = forwardRef<PreviewAddressBarHandle, Props>(
   function PreviewAddressBar({ url, onSubmit, onReload }, ref) {
     const [draft, setDraft] = useState(url);
     const inputRef = useRef<HTMLInputElement>(null);
+    const activeCount = useDevicePreviewStore((s) => s.active.length);
 
     // Keep draft in sync when the parent updates the URL externally
     // (AI tool, detected localhost chip, etc.).
@@ -184,6 +187,34 @@ export const PreviewAddressBar = forwardRef<PreviewAddressBarHandle, Props>(
             }}
           />
         </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={() => {
+            if (url) {
+              useDevicePreviewStore.getState().setUrl(url);
+            }
+            useDevicePreviewStore.getState().togglePicker();
+          }}
+          title="Device Preview (iPhone 17 Pro, Huawei Pura 80, Galaxy S26)"
+          className={`relative size-7 shrink-0 rounded-md hover:bg-accent ${
+            activeCount > 0
+              ? "bg-indigo-500/15 text-indigo-400 hover:text-indigo-300"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <HugeiconsIcon
+            icon={SmartPhone01Icon}
+            size={14}
+            strokeWidth={1.75}
+          />
+          {activeCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-indigo-500 px-0.5 text-[8px] font-bold text-white shadow-sm">
+              {activeCount}
+            </span>
+          )}
+        </Button>
         <Button
           type="button"
           variant="ghost"

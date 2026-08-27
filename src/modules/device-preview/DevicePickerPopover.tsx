@@ -17,7 +17,7 @@ import {
 import { useDevicePreviewStore } from "./lib/useDevicePreviewStore";
 
 type Props = {
-  anchor: { x: number; y: number };
+  anchor?: { x?: number; y?: number; top?: number; right?: number };
 };
 
 const CATEGORY_ICONS = {
@@ -45,8 +45,9 @@ export function DevicePickerPopover({ anchor }: Props) {
   const handleUrlSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
-      const trimmed = urlInput.trim();
-      if (trimmed) setUrl(trimmed);
+      if (urlInput.trim()) {
+        setUrl(urlInput.trim());
+      }
     },
     [urlInput, setUrl],
   );
@@ -72,7 +73,7 @@ export function DevicePickerPopover({ anchor }: Props) {
       style={{
         position: "fixed",
         inset: 0,
-        zIndex: 9998,
+        zIndex: 999998,
       }}
     >
       <div
@@ -80,8 +81,10 @@ export function DevicePickerPopover({ anchor }: Props) {
         onClick={(e) => e.stopPropagation()}
         style={{
           position: "fixed",
-          bottom: anchor.y + 8,
-          right: window.innerWidth - anchor.x,
+          top: anchor?.top ?? (anchor?.y ? undefined : 46),
+          bottom: anchor?.y ? anchor.y + 8 : undefined,
+          right: anchor?.right ?? (anchor?.x ? Math.max(16, window.innerWidth - anchor.x) : 18),
+          zIndex: 999999,
           width: 340,
           background: "rgba(18, 18, 22, 0.95)",
           backdropFilter: "blur(20px)",
@@ -210,7 +213,7 @@ export function DevicePickerPopover({ anchor }: Props) {
                           : "transparent",
                         color: disabled
                           ? "rgba(255,255,255,0.2)"
-                          : "rgba(255,255,255,0.8)",
+                          : "rgba(255,255,255,0.85)",
                         cursor: disabled ? "not-allowed" : "pointer",
                         fontSize: 12,
                         fontFamily: "inherit",
@@ -241,15 +244,84 @@ export function DevicePickerPopover({ anchor }: Props) {
                         {isActive && "\u2713"}
                       </div>
 
-                      <span style={{ flex: 1, fontWeight: 450 }}>
-                        {device.name}
-                      </span>
+                      {/* Device color swatch preview */}
+                      <div
+                        style={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: "50%",
+                          backgroundColor: device.color,
+                          border: "1px solid rgba(255,255,255,0.2)",
+                          boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
+                          flexShrink: 0,
+                        }}
+                        title={device.name}
+                      />
+
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          flex: 1,
+                          minWidth: 0,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 5,
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontWeight: 500,
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            {device.name}
+                          </span>
+                          {device.tag && (
+                            <span
+                              style={{
+                                fontSize: 8.5,
+                                fontWeight: 700,
+                                padding: "1px 4px",
+                                borderRadius: 3,
+                                background:
+                                  "linear-gradient(135deg, #f59e0b, #ef4444)",
+                                color: "#fff",
+                                textTransform: "uppercase",
+                                letterSpacing: 0.5,
+                              }}
+                            >
+                              {device.tag}
+                            </span>
+                          )}
+                        </div>
+                        {device.subtitle && (
+                          <span
+                            style={{
+                              fontSize: 9.5,
+                              color: "rgba(255,255,255,0.4)",
+                              whiteSpace: "nowrap",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                            }}
+                          >
+                            {device.subtitle}
+                          </span>
+                        )}
+                      </div>
 
                       <span
                         style={{
                           fontSize: 10,
                           color: "rgba(255,255,255,0.3)",
                           fontFamily: "var(--font-mono, monospace)",
+                          flexShrink: 0,
                         }}
                       >
                         {device.screenWidth}x{device.screenHeight}

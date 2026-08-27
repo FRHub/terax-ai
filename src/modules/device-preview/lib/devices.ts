@@ -10,6 +10,9 @@ export type DeviceProfile = {
   bezelRadius: number;
   color: string;
   isResizable?: boolean;
+  accentColor?: string;
+  subtitle?: string;
+  tag?: string;
 };
 
 export const DEVICE_CATALOG: DeviceProfile[] = [
@@ -23,6 +26,45 @@ export const DEVICE_CATALOG: DeviceProfile[] = [
     bezelRadius: 14,
     color: "#18181f",
     isResizable: true,
+  },
+  {
+    id: "iphone-17-pro",
+    name: "iPhone 17 Pro",
+    category: "phone",
+    screenWidth: 402,
+    screenHeight: 874,
+    devicePixelRatio: 3,
+    bezelRadius: 52,
+    color: "#c25e2e",
+    accentColor: "#d97736",
+    subtitle: "Cosmic Orange Titanium",
+    tag: "New",
+  },
+  {
+    id: "huawei-pura-80-ultra",
+    name: "Huawei Pura 80 Ultra",
+    category: "phone",
+    screenWidth: 420,
+    screenHeight: 936,
+    devicePixelRatio: 3,
+    bezelRadius: 44,
+    color: "#1a1c20",
+    accentColor: "#d4af37",
+    subtitle: "Graphite · Gold XMAGE",
+    tag: "New",
+  },
+  {
+    id: "galaxy-s26-ultra",
+    name: "Galaxy S26 Ultra",
+    category: "phone",
+    screenWidth: 412,
+    screenHeight: 915,
+    devicePixelRatio: 3,
+    bezelRadius: 28,
+    color: "#ede5d6",
+    accentColor: "#d4af37",
+    subtitle: "Titanium Warm Cream · S-Pen",
+    tag: "New",
   },
   {
     id: "iphone-16-pro",

@@ -41,6 +41,19 @@ describe("deviceById", () => {
     const d = deviceById("iphone-16-pro");
     expect(d).toBeDefined();
     expect(d?.name).toBe("iPhone 16 Pro");
+
+    const ip17 = deviceById("iphone-17-pro");
+    expect(ip17).toBeDefined();
+    expect(ip17?.name).toBe("iPhone 17 Pro");
+    expect(ip17?.color).toBe("#c25e2e");
+
+    const huawei = deviceById("huawei-pura-80-ultra");
+    expect(huawei).toBeDefined();
+    expect(huawei?.name).toBe("Huawei Pura 80 Ultra");
+
+    const s26 = deviceById("galaxy-s26-ultra");
+    expect(s26).toBeDefined();
+    expect(s26?.name).toBe("Galaxy S26 Ultra");
   });
 
   it("returns undefined for unknown id", () => {
